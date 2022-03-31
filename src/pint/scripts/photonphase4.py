@@ -98,9 +98,9 @@ def main(argv=None):
 
     parser.add_argument(
         "--polycos",
-        #default=False,
+        default=False,
         action="store_true",
-        help="Use polycos to calculate phases; use this when working with very large event files. Creates multiple, smaller event files"
+        help="Use polycos to calculate phases; use this when working with very large event files"
     )
 
     args = parser.parse_args(argv)
@@ -139,6 +139,23 @@ def main(argv=None):
                 "Please barycenter the event file using the official mission tools before processing with PINT"
             )
 
+    #If NOT using polycos, get TOAs and compute TDBs and posvels
+    if args.polycos == False:
+       
+        # Read event file and return list of TOA objects
+        #try:
+        tl = load_event_TOAs(args.eventfile, telescope, minmjd=minmjd, maxmjd=maxmjd)
+        #except KeyError:
+        #    log.error(
+             #   "Observatory not recognized. This probably means you need to provide an orbit file or barycenter the event file."
+            #)   
+        #    sys.exit(1)
+
+        # Now convert to TOAs object and compute TDBs and posvels
+        if len(tl) == 0:
+            log.error("No TOAs, exiting!")
+            sys.exit(0)
+
     # Read in model
     modelin = pint.models.get_model(args.parfile)
     use_planets = False
@@ -160,7 +177,9 @@ def main(argv=None):
         )
         raise ValueError("Model missing BINARY compo:wnent.")
 
-    if args.polycos:
+    
+    #If using polycos, calculate pulse phases using polycos
+    if args.polycos == True:
         log.info("Using polycos to get pulse phases")
 
         if args.addorbphase:
@@ -195,25 +214,9 @@ def main(argv=None):
         for i in rows:
             phases[i] += 1 #cannot have negative phase
 
-
-    else: 
-        # Calculate phases using pulsar model, not polycos 
-        # Read event file and return list of TOA objects
-        try:
-            tl = load_event_TOAs(args.eventfile, telescope, minmjd=minmjd, maxmjd=maxmjd)
-        except KeyError:
-            log.error(
-                "Observatory not recognized. This probably means you need to provide an orbit file or barycenter the event file."
-            )
-            sys.exit(1)
-
-
-        # Now convert to TOAs object and compute TDBs and posvels
-        if len(tl) == 0:
-            log.error("No TOAs, exiting!")
-            sys.exit(0)
-
     
+    #If NOT using polycos, compute phases using model
+    if args.polycos == False: 
         ts = toa.get_TOAs_list(
             tl,
             ephem=args.ephem,

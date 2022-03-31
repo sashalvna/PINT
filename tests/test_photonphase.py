@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-import pint.scripts.photonphase as photonphase
+import photonphase4 as photonphase
 from pinttestdata import datadir
 from astropy.io import fits
 import numpy as np
