@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-import polycos_photonphase as photonphase
+import photonphase
 from pinttestdata import datadir
 from astropy.io import fits
 import numpy as np
